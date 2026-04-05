@@ -1,0 +1,11 @@
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+*.pdb
+*.exe
+*.dll
+.DS_Store
+.vscode/
+.idea/

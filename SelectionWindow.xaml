@@ -1,0 +1,11 @@
+<Window x:Class="SnapText.SelectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Seçim Alanı" WindowStyle="None" Topmost="True" 
+        AllowsTransparency="True" Background="#22000000" Cursor="Cross"
+        WindowState="Maximized" MouseDown="Window_MouseDown" 
+        MouseMove="Window_MouseMove" MouseUp="Window_MouseUp">
+    <Canvas x:Name="OverlayCanvas">
+        <Rectangle x:Name="SelectionRectangle" Stroke="#f43f5e" StrokeThickness="2" Fill="#44ffffff" Visibility="Hidden" />
+    </Canvas>
+</Window>

@@ -12,7 +12,7 @@
             </ResourceDictionary.MergedDictionaries>
 
             <Style TargetType="{x:Type Window}">
-                <Setter Property="Background" Value="#000000"/>
+                <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Foreground" Value="#FFFFFF"/>
             </Style>
         </ResourceDictionary>

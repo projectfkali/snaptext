@@ -14,5 +14,7 @@ namespace SnapText
         public bool AutoCopy { get; set; } = true;
         public bool AlwaysOnTop { get; set; } = false;
         public string Language { get; set; } = "tr-TR"; // Default to Turkish
+        public bool StartWithWindows { get; set; } = false;
+        public string TranslationTarget { get; set; } = "tr"; // Default translation target
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace SnapText
@@ -35,20 +36,31 @@ namespace SnapText
             return new AppSettings();
         }
 
-        public static void SaveHistory(List<OcrResult> history)
+        public static void SaveHistory(List<OcrHistoryItem> history)
         {
+            // Sabitlenmiş ögeler asla silinmez. Maksimum 50 öge sınırı.
+            if (history.Count > 50)
+            {
+                var pinnedItems = history.Where(h => h.IsPinned).ToList();
+                var unpinnedItems = history.Where(h => !h.IsPinned).ToList();
+                
+                int slotsLeft = 50 - pinnedItems.Count;
+                unpinnedItems = slotsLeft > 0 ? unpinnedItems.Take(slotsLeft).ToList() : new List<OcrHistoryItem>();
+                
+                history = pinnedItems.Concat(unpinnedItems).OrderByDescending(h => h.Timestamp).ToList();
+            }
             var json = JsonSerializer.Serialize(history, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(_historyPath, json);
         }
 
-        public static List<OcrResult> LoadHistory()
+        public static List<OcrHistoryItem> LoadHistory()
         {
             if (File.Exists(_historyPath))
             {
                 var json = File.ReadAllText(_historyPath);
-                return JsonSerializer.Deserialize<List<OcrResult>>(json) ?? new List<OcrResult>();
+                return JsonSerializer.Deserialize<List<OcrHistoryItem>>(json) ?? new List<OcrHistoryItem>();
             }
-            return new List<OcrResult>();
+            return new List<OcrHistoryItem>();
         }
     }
 }

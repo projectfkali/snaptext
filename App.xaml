@@ -12,8 +12,63 @@
             </ResourceDictionary.MergedDictionaries>
 
             <Style TargetType="{x:Type Window}">
-                <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Foreground" Value="#FFFFFF"/>
+            </Style>
+
+            <!-- IOs Style Palette -->
+            <SolidColorBrush x:Key="iosBlue"          Color="#0A84FF"/>
+            <SolidColorBrush x:Key="iosCard"           Color="#2C2C2E"/>
+            <SolidColorBrush x:Key="iosSideBar"        Color="#111113"/>
+            <SolidColorBrush x:Key="iosSurface"        Color="#3A3A3C"/>
+            <SolidColorBrush x:Key="iosSeparator"      Color="#38383A"/>
+            <SolidColorBrush x:Key="iosTextPrimary"    Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="iosTextSecondary"  Color="#8E8E93"/>
+            <SolidColorBrush x:Key="iosRed"            Color="#FF453A"/>
+            <SolidColorBrush x:Key="iosGreen"          Color="#30D158"/>
+
+            <!-- Pill Button -->
+            <Style x:Key="iosPillButton" TargetType="Button">
+                <Setter Property="Background"   Value="{StaticResource iosBlue}"/>
+                <Setter Property="Foreground"   Value="White"/>
+                <Setter Property="Height"       Value="50"/>
+                <Setter Property="FontWeight"   Value="Bold"/>
+                <Setter Property="FontSize"     Value="14"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.9"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Icon Button -->
+            <Style x:Key="iosIconButton" TargetType="Button">
+                <Setter Property="Background"  Value="Transparent"/>
+                <Setter Property="Foreground"  Value="White"/>
+                <Setter Property="Height"      Value="38"/>
+                <Setter Property="Width"       Value="38"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="Transparent" CornerRadius="8">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#20FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
         </ResourceDictionary>
     </Application.Resources>

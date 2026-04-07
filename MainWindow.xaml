@@ -3,202 +3,351 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="SnapText" Height="520" Width="420"
-        Background="Transparent"
-        Foreground="{DynamicResource MaterialDesignBody}"
-        WindowStyle="None" ResizeMode="NoResize"
+        Title="SnapText" Height="620" Width="780" MinHeight="550" MinWidth="650"
+        WindowStyle="None" ResizeMode="CanResizeWithGrip"
+        AllowsTransparency="False"
+        Background="#1C1C1E"
         Icon="Assets/logo.png"
-        AllowsTransparency="True" WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
-        <!-- Modern Palet & Gradyanlar -->
-        <LinearGradientBrush x:Key="PrimaryGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#6366f1" Offset="0"/>
-            <GradientStop Color="#a855f7" Offset="1"/>
-        </LinearGradientBrush>
-        
-        <SolidColorBrush x:Key="GlassBackground" Color="#E6111827"/> <!-- Dark Glass -->
-        <SolidColorBrush x:Key="CardBackground" Color="#22FFFFFF"/> <!-- White Glass -->
-        
-        <Style x:Key="ToolButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+        <!-- Mini Settings Button Style -->
+        <Style x:Key="iosSettingButton" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource iosSurface}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Width" Value="40"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#33FFFFFF"/>
-                    <Setter Property="RenderTransform">
-                        <Setter.Value>
-                            <ScaleTransform ScaleX="1.1" ScaleY="1.1"/>
-                        </Setter.Value>
-                    </Setter>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Premium AI Button -->
+        <Style x:Key="PremiumAiButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Height" Value="50"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12" Margin="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="bd" Property="Background" Value="#15FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="60" GlassFrameThickness="0" CornerRadius="20" />
+        <shell:WindowChrome CaptionHeight="50" GlassFrameThickness="0" CornerRadius="0" ResizeBorderThickness="8"/>
     </shell:WindowChrome.WindowChrome>
 
-    <materialDesign:DrawerHost x:Name="MainDrawerHost" BorderThickness="0" BorderBrush="Transparent">
-        <!-- RİGHT DRAWER (Geçmiş & Ayarlar) -->
-        <materialDesign:DrawerHost.RightDrawerContent>
-            <Grid Width="340" Background="#0f172a">
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="260"/> <!-- Left: History -->
+            <ColumnDefinition Width="*"/>   <!-- Right: Main -->
+        </Grid.ColumnDefinitions>
+
+        <!-- ========== LEFT PANEL: HISTORY ========== -->
+        <Border Grid.Column="0" Background="{StaticResource iosSideBar}" BorderBrush="{StaticResource iosSeparator}" BorderThickness="0,0,1,0">
+            <Grid Margin="15,20,15,15">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <materialDesign:ColorZone Mode="PrimaryMid" Background="{StaticResource PrimaryGradient}" Padding="20">
-                    <TextBlock Text="KONTROL MERKEZİ" FontWeight="Bold" FontSize="16"/>
-                </materialDesign:ColorZone>
+                <TextBlock Grid.Row="0" Text="ÇALIŞMA GEÇMİŞİ" FontSize="11" FontWeight="ExtraBold" Foreground="{StaticResource iosTextSecondary}" Margin="5,0,0,15"/>
 
-                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="20">
-                        <TextBlock Text="OCR GEÇMİŞİ" Opacity="0.5" FontSize="12" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <ListBox x:Name="HistoryListBox" Background="Transparent" BorderThickness="0" MaxHeight="250">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <materialDesign:Card Margin="0,0,0,10" Padding="12" UniformCornerRadius="10" Background="#1e293b">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel>
-                                                <TextBlock Text="{Binding Text}" MaxWidth="240" TextTrimming="CharacterEllipsis" FontSize="13" Foreground="#f1f5f9"/>
-                                                <TextBlock Text="{Binding Timestamp, StringFormat='dd MMM, HH:mm'}" FontSize="10" Opacity="0.4" Margin="0,4,0,0"/>
-                                            </StackPanel>
-                                            <Button Grid.Column="1" Style="{StaticResource ToolButton}" Width="30" Height="30" 
-                                                    Click="CopyHistoryItem_Click" Tag="{Binding Text}">
-                                                <materialDesign:PackIcon Kind="ContentCopy" Width="14"/>
-                                            </Button>
-                                        </Grid>
-                                    </materialDesign:Card>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
+                <ListBox Grid.Row="1" x:Name="HistoryListBox" Background="Transparent" BorderThickness="0" 
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="HistoryListBox_SelectionChanged">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Margin" Value="0,0,0,8"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="bd" CornerRadius="12" Background="{TemplateBinding Background}" Padding="12,10">
+                                            <ContentPresenter />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="{StaticResource iosCard}"/>
+                                            </Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="bd" Property="Background" Value="#0AFFFFFF"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Text}" FontSize="13" Foreground="White" MaxHeight="38" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" LineHeight="18"/>
+                                    <TextBlock Text="{Binding Timestamp, StringFormat='dd MMM, HH:mm'}" FontSize="10" Foreground="{StaticResource iosTextSecondary}" Margin="0,5,0,0"/>
+                                </StackPanel>
+                                
+                                <Button x:Name="PinBtn" Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="0" Width="30" Height="30" VerticalAlignment="Center" Click="TogglePin_Click" Tag="{Binding}">
+                                    <materialDesign:PackIcon x:Name="PinIcon" Kind="PinOutline" Width="18" Height="18" Foreground="{StaticResource iosTextSecondary}"/>
+                                </Button>
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                    <Setter TargetName="PinIcon" Property="Kind" Value="Pin"/>
+                                    <Setter TargetName="PinIcon" Property="Foreground" Value="#0A84FF"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
-                        <Button Content="GEÇMİŞİ TEMİZLE" Margin="0,10,0,20" Click="ClearHistory_Click" 
-                                Style="{StaticResource MaterialDesignOutlinedButton}" BorderBrush="#334155" Foreground="#94a3b8"/>
-                        
-                        <Separator Background="#1e293b" Margin="0,5,0,20"/>
-                        
-                        <TextBlock Text="AYARLAR" Opacity="0.5" FontSize="12" FontWeight="Bold" Margin="0,0,0,10"/>
-                        
-                        <CheckBox x:Name="AutoCopyCheckBox" Content="Metni Otomatik Kopyala" IsChecked="True" Margin="0,0,0,10" Checked="SettingChanged" Unchecked="SettingChanged"/>
-                        <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Her Zaman Üstte" IsChecked="False" Margin="0,0,0,10" Checked="SettingChanged" Unchecked="SettingChanged"/>
-                        <CheckBox x:Name="StartWithWindowsCheckBox" Content="Windows ile Başlat" Margin="0,0,0,15" Checked="SettingChanged" Unchecked="SettingChanged"/>
-                        
-                        <StackPanel Margin="0,10,0,0">
-                            <TextBlock Text="OCR Okuma Dili" Opacity="0.6" FontSize="11" Margin="0,0,0,5"/>
-                            <ComboBox x:Name="LanguageComboBox" Style="{StaticResource MaterialDesignOutlinedComboBox}" BorderThickness="1" BorderBrush="#334155" 
-                                      SelectionChanged="SettingChanged" materialDesign:ColorZoneAssist.Mode="SecondaryMid"/>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,15,0,0">
-                            <TextBlock Text="Hedef Çeviri Dili" Opacity="0.6" FontSize="11" Margin="0,0,0,5"/>
-                            <ComboBox x:Name="TargetLangComboBox" Style="{StaticResource MaterialDesignOutlinedComboBox}" SelectionChanged="SettingChanged">
-                                <ComboBoxItem Content="Türkçe" Tag="tr"/>
-                                <ComboBoxItem Content="İngilizce" Tag="en"/>
-                                <ComboBoxItem Content="Almanca" Tag="de"/>
-                                <ComboBoxItem Content="Fransızca" Tag="fr"/>
-                            </ComboBox>
-                        </StackPanel>
-                    </StackPanel>
-                </ScrollViewer>
-
-                <Button Grid.Row="2" Content="MENÜYÜ KAPAT" Margin="20" Click="CloseDrawer_Click" 
-                        Style="{StaticResource MaterialDesignFlatMidBgButton}"/>
+                <Button Grid.Row="2" Content="Sabitlenmeyenleri Sil" Margin="0,15,0,0" Click="ClearHistory_Click" Foreground="{StaticResource iosRed}" Style="{StaticResource MaterialDesignFlatButton}"/>
             </Grid>
-        </materialDesign:DrawerHost.RightDrawerContent>
+        </Border>
 
-        <!-- MAIN INTERFACE -->
-        <Border CornerRadius="20" Background="{StaticResource GlassBackground}" BorderBrush="#33FFFFFF" BorderThickness="1" Margin="5">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- ========== RIGHT PANEL: MAIN ========== -->
+        <Grid Grid.Column="1" Margin="25,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/> <!-- 0: Header -->
+                <RowDefinition Height="*"/>    <!-- 1: Result Display -->
+                <RowDefinition Height="Auto"/> <!-- 2: Action Bar -->
+                <RowDefinition Height="Auto"/> <!-- 3: Capture Button -->
+            </Grid.RowDefinitions>
 
-                <!-- Custom Title Bar -->
-                <Grid Height="60">
-                    <StackPanel Orientation="Horizontal" Margin="20,0">
-                        <Border Width="32" Height="32" CornerRadius="8" Background="{StaticResource PrimaryGradient}" Margin="0,0,12,0">
-                            <materialDesign:PackIcon Kind="AutoFix" Foreground="White" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <TextBlock Text="SNAPTEXT" FontSize="18" FontWeight="ExtraBold" VerticalAlignment="Center" Foreground="White"/>
+            <!-- Header -->
+            <Grid Grid.Row="0" Margin="0,0,0,20">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="30" Height="30" CornerRadius="8" Background="{StaticResource iosBlue}" Margin="0,0,12,0">
+                        <TextBlock Text="S" FontWeight="ExtraBold" FontSize="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel>
+                        <TextBlock Text="SnapText" FontSize="18" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="QrBadge" Text="QR TESPİT EDİLDİ" Visibility="Collapsed" FontSize="9" FontWeight="Bold" Foreground="{StaticResource iosGreen}"/>
                     </StackPanel>
-                    
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10,0">
-                        <Button Style="{StaticResource ToolButton}" Click="OpenDrawer_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                            <materialDesign:PackIcon Kind="Settings" Width="20" Height="20"/>
-                        </Button>
-                        <Button Style="{StaticResource ToolButton}" Click="CloseButton_Click" shell:WindowChrome.IsHitTestVisibleInChrome="True" Foreground="#f43f5e">
-                            <materialDesign:PackIcon Kind="Close" Width="20" Height="20"/>
-                        </Button>
-                    </StackPanel>
-                </Grid>
+                </StackPanel>
 
-                <!-- Result Area -->
-                <Grid Grid.Row="1" Margin="25,5,25,20">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource iosIconButton}" Click="OpenDrawer_Click" Margin="0,0,8,0">
+                        <materialDesign:PackIcon Kind="SettingsOutline" Width="22" Height="22" Opacity="0.7"/>
+                    </Button>
+                    <Button Style="{StaticResource iosIconButton}" Click="CloseButton_Click">
+                        <materialDesign:PackIcon Kind="Close" Width="22" Height="22" Foreground="{StaticResource iosRed}"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Result TextBox area -->
+            <Border Grid.Row="1" CornerRadius="16" Background="{StaticResource iosCard}" BorderBrush="{StaticResource iosSurface}" BorderThickness="1" Margin="0,0,0,15" ClipToBounds="True">
+                <Grid>
                     <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/> <!-- Top Action Bar -->
+                        <RowDefinition Height="*"/>    <!-- Text Box -->
+                        <RowDefinition Height="Auto"/> <!-- AI Progress -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Standard Toolbar -->
+                    <Border Grid.Row="0" Background="#10FFFFFF" Padding="8,4">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Text="AKILLI ÇALIŞMA ALANI" Opacity="0.5" VerticalAlignment="Center" FontSize="10" FontWeight="Bold" Margin="0,0,15,0" />
+                            <Button Style="{StaticResource iosIconButton}" Click="CopyCurrent_Click" ToolTip="Kopyala" Width="30" Height="30">
+                                <materialDesign:PackIcon Kind="ContentCopy" Width="15"/>
+                            </Button>
+                            <Button Style="{StaticResource iosIconButton}" Click="Speak_Click" ToolTip="Sesli Dinle" Width="30" Height="30">
+                                <materialDesign:PackIcon Kind="VolumeHigh" Width="15"/>
+                            </Button>
+                            <Button Style="{StaticResource iosIconButton}" Click="TranslateWeb_Click" ToolTip="Web'de Çevir" Width="30" Height="30">
+                                <materialDesign:PackIcon Kind="Web" Width="15"/>
+                            </Button>
+                            <Button Style="{StaticResource iosIconButton}" Click="Export_Click" ToolTip="Dışa Aktar" Width="30" Height="30">
+                                <materialDesign:PackIcon Kind="ExportVariant" Width="15"/>
+                            </Button>
+                            <Button Style="{StaticResource iosIconButton}" Click="ClearCurrent_Click" Foreground="{StaticResource iosRed}" ToolTip="Temizle" Width="30" Height="30">
+                                <materialDesign:PackIcon Kind="DeleteOutline" Width="15"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Watermark -->
+                    <StackPanel x:Name="EmptyStateOverlay" Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Opacity="0.3">
+                        <materialDesign:PackIcon Kind="TextRecognition" Width="50" Height="50" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Nasıl yardımcı olabilirim?" FontSize="16" FontWeight="SemiBold" Foreground="White" Margin="0,15,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Metin okutun veya bir yapay zeka komutu yazın." FontSize="13" Foreground="White" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                    </StackPanel>
+
+                    <TextBox Grid.Row="1" x:Name="ResultTextBox" Background="Transparent" BorderThickness="0" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" 
+                             FontSize="16" Foreground="White" CaretBrush="{StaticResource iosBlue}" Padding="15" TextChanged="ResultTextBox_TextChanged"/>
+
+                    <!-- Inline AI Loading -->
+                    <Border Grid.Row="2" x:Name="InlineAiProgress" Visibility="Collapsed" Background="#150A84FF" Padding="15,10">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <ProgressBar Style="{StaticResource MaterialDesignCircularProgressBar}" Width="20" Height="20" IsIndeterminate="True" Foreground="{StaticResource iosBlue}"/>
+                            <TextBlock x:Name="InlineAiLoadingText" Text="AI Modeli Yükleniyor..." VerticalAlignment="Center" Margin="10,0,0,0" FontWeight="Bold" Foreground="{StaticResource iosBlue}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Premium AI Action Palette -->
+            <Border Grid.Row="2" Background="{StaticResource iosCard}" CornerRadius="16" Padding="6" Margin="0,0,0,20">
+                <UniformGrid Columns="4">
+                    <Button Style="{StaticResource PremiumAiButton}" Foreground="#30D158" Click="AiClean_Click" ToolTip="Satır sonlarını ve boşlukları düzeltir">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Broom" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Temizle" FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PremiumAiButton}" Foreground="#0A84FF" Click="AiTranslate_Click" ToolTip="Yerel yapay zeka ile doğrudan çeviri yapar">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Translate" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="AI Çevir" FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PremiumAiButton}" Foreground="#BF5AF2" Click="AiSummarize_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Creation" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="Özetle" FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PremiumAiButton}" Foreground="#FF9F0A" Click="AiExplain_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CodeBraces" Width="18" Height="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="İncele" FontWeight="Bold" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </UniformGrid>
+            </Border>
+
+            <!-- Custom Prompt Bar -->
+            <Border Grid.Row="3" Background="{StaticResource iosCard}" CornerRadius="16" Padding="6">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <Button Grid.Column="0" ToolTip="Ekranı Kırp ve Oku" Style="{StaticResource iosIconButton}" Click="CaptureButton_Click" Background="#1A0A84FF" Foreground="{StaticResource iosBlue}" Width="40" Height="40" Margin="0,0,10,0">
+                        <materialDesign:PackIcon Kind="Crop" Width="20" Height="20" />
+                    </Button>
+                    
+                    <TextBox Grid.Column="1" x:Name="CustomPromptTextBox" Background="Transparent" BorderThickness="0" VerticalAlignment="Center" 
+                             Foreground="White" FontSize="14" CaretBrush="{StaticResource iosBlue}" 
+                             materialDesign:HintAssist.Hint="Llama'ya doğrudan bir talimat yazın (Örn: Şiir olarak baştan yaz)..." 
+                             materialDesign:TextFieldAssist.DecorationVisibility="Hidden"
+                             KeyDown="CustomPromptTextBox_KeyDown"/>
+                             
+                    <Button Grid.Column="2" ToolTip="Gönder" Style="{StaticResource iosIconButton}" Click="SendCustomPrompt_Click" Background="{StaticResource iosBlue}" Foreground="White" Width="40" Height="40" Margin="10,0,0,0">
+                        <materialDesign:PackIcon Kind="Send" Width="18" Height="18" Margin="2,0,0,0" />
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ========== SETTINGS MODAL (OVERLAY) ========== -->
+        <Grid Grid.ColumnSpan="2" x:Name="SettingsOverlay" Visibility="Collapsed">
+            <Border Background="#99000000" MouseDown="CloseDrawer_Click"/>
+            <Border HorizontalAlignment="Right" Width="360" Background="{StaticResource iosSideBar}" BorderBrush="{StaticResource iosSeparator}" BorderThickness="1,0,0,0">
+                <Grid Margin="30">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <materialDesign:Card UniformCornerRadius="15" Background="#15FFFFFF" BorderBrush="#20FFFFFF" BorderThickness="1" Padding="5">
-                        <TextBox x:Name="ResultTextBox" 
-                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                 AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
-                                 FontSize="14" Foreground="#f8fafc" IsReadOnly="False" BorderThickness="0"
-                                 materialDesign:TextFieldAssist.DecorationVisibility="Collapsed"
-                                 Text="SnapText hazır. Hadi bir şeyler yakalayalım!"/>
-                    </materialDesign:Card>
+                    <TextBlock Grid.Row="0" Text="Ayarlar" FontWeight="Bold" FontSize="24" Foreground="White" Margin="0,0,0,30"/>
 
-                    <!-- Floating Action Bar -->
-                    <Border Grid.Row="1" Margin="0,-25,0,0" Background="#CC1e293b" CornerRadius="25" Padding="5" 
-                            HorizontalAlignment="Center" VerticalAlignment="Bottom" Height="50" BorderBrush="#40FFFFFF" BorderThickness="1">
-                        <StackPanel Orientation="Horizontal">
-                            <Button Style="{StaticResource ToolButton}" Click="CopyCurrent_Click" ToolTip="Kopyala">
-                                <materialDesign:PackIcon Kind="ContentCopy" Width="18"/>
-                            </Button>
-                            <Button Style="{StaticResource ToolButton}" Click="SearchGoogle_Click" ToolTip="Google'da Ara">
-                                <materialDesign:PackIcon Kind="Google" Width="18"/>
-                            </Button>
-                            <Button Style="{StaticResource ToolButton}" Click="Translate_Click" ToolTip="Tercüme Et">
-                                <materialDesign:PackIcon Kind="Translate" Width="18"/>
-                            </Button>
-                            <Button Style="{StaticResource ToolButton}" Click="Speak_Click" ToolTip="Dinle">
-                                <materialDesign:PackIcon Kind="VolumeHigh" Width="18"/>
-                            </Button>
-                            <Separator Background="#33FFFFFF" Width="1" Margin="5,10"/>
-                            <Button Style="{StaticResource ToolButton}" Click="ClearCurrent_Click" ToolTip="Temizle" Foreground="#fb7185">
-                                <materialDesign:PackIcon Kind="Delete" Width="18"/>
-                            </Button>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Language Settings -->
+                            <Border CornerRadius="16" Background="{StaticResource iosCard}" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <TextBlock Text="DİL AYARLARI" FontSize="11" Foreground="{StaticResource iosTextSecondary}" FontWeight="Bold" Margin="0,0,0,15"/>
+                                    <StackPanel Margin="0,0,0,10">
+                                        <TextBlock Text="OCR Dili" Foreground="White" Opacity="0.8" FontSize="13" Margin="0,0,0,5"/>
+                                        <ComboBox x:Name="LanguageComboBox" Style="{StaticResource MaterialDesignComboBox}" Foreground="White" SelectionChanged="SettingChanged"/>
+                                    </StackPanel>
+                                    <Separator Background="{StaticResource iosSeparator}" Margin="0,12"/>
+                                    <StackPanel>
+                                        <TextBlock Text="Hedef Çeviri Dili (AI)" Foreground="White" Opacity="0.8" FontSize="13" Margin="0,0,0,5"/>
+                                        <ComboBox x:Name="TargetLangComboBox" Style="{StaticResource MaterialDesignComboBox}" Foreground="White" SelectionChanged="SettingChanged">
+                                            <ComboBoxItem Content="Türkçe" Tag="Turkish"/>
+                                            <ComboBoxItem Content="İngilizce" Tag="English"/>
+                                            <ComboBoxItem Content="Almanca" Tag="German"/>
+                                            <ComboBoxItem Content="Fransızca" Tag="French"/>
+                                        </ComboBox>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Logic Options -->
+                            <Border CornerRadius="16" Background="{StaticResource iosCard}" Padding="15" Margin="0,0,0,15">
+                                <StackPanel>
+                                    <TextBlock Text="SEÇENEKLER" FontSize="11" Foreground="{StaticResource iosTextSecondary}" FontWeight="Bold" Margin="0,0,0,15"/>
+                                    <CheckBox x:Name="TableModeCheckBox" Content="Tablo Modu (Markdown)" Foreground="White" Margin="0,5" Checked="SettingChanged" Unchecked="SettingChanged"/>
+                                    <CheckBox x:Name="EnhanceImageCheckBox" Content="Görüntü İyileştirme (Keskin OCR)" Foreground="White" Margin="0,5" Checked="SettingChanged" Unchecked="SettingChanged"/>
+                                    <CheckBox x:Name="AppendModeCheckBox" Content="Taramaları Birleştir (Append)" Foreground="White" Margin="0,5" Checked="SettingChanged" Unchecked="SettingChanged"/>
+                                    <CheckBox x:Name="AutoCopyCheckBox" Content="Otomatik Kopyala" Foreground="White" Margin="0,5" Checked="SettingChanged" Unchecked="SettingChanged"/>
+                                    <CheckBox x:Name="AlwaysOnTopCheckBox" Content="Üstte Tut" Foreground="White" Margin="0,5" Checked="SettingChanged" Unchecked="SettingChanged"/>
+                                    <CheckBox x:Name="StartWithWindowsCheckBox" Content="Sistemle Başlat" Foreground="White" Margin="0,5" Checked="SettingChanged" Unchecked="SettingChanged"/>
+                                    <CheckBox x:Name="DarkModeCheckBox" Content="Koyu Tema" Foreground="White" Margin="0,5" Checked="SettingChanged" Unchecked="SettingChanged"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Hotkey Settings -->
+                            <Border CornerRadius="16" Background="{StaticResource iosCard}" Padding="15">
+                                <StackPanel>
+                                    <TextBlock Text="KISAYOL" FontSize="11" Foreground="{StaticResource iosTextSecondary}" FontWeight="Bold" Margin="0,0,0,12"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Name="HotkeyTextBlock" Text="Ctrl+Shift+S" Foreground="White" FontSize="14" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="1" Content="Değiştir" Style="{StaticResource iosSettingButton}" Click="ChangeHotkey_Click"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
-                    </Border>
-                </Grid>
+                    </ScrollViewer>
 
-                <!-- Action Button -->
-                <Grid Grid.Row="2" Margin="30,10,30,30">
-                    <Button Content="EKRAN YAKALA" Height="55" 
-                            FontSize="15" FontWeight="ExtraBold"
-                            Style="{StaticResource MaterialDesignRaisedButton}"
-                            Background="{StaticResource PrimaryGradient}"
-                            BorderThickness="0"
-                            materialDesign:ButtonAssist.CornerRadius="14"
-                            Click="CaptureButton_Click">
-                        <Button.Effect>
-                            <DropShadowEffect BlurRadius="15" Color="#6366f1" Opacity="0.4" ShadowDepth="0"/>
-                        </Button.Effect>
-                    </Button>
+                    <Button Grid.Row="2" Content="Tamam" Style="{StaticResource iosPillButton}" Height="50" Click="CloseDrawer_Click"/>
                 </Grid>
-            </Grid>
-        </Border>
-    </materialDesign:DrawerHost>
+            </Border>
+        </Grid>
+
+        <!-- Hotkey Recorder Overlay -->
+        <Grid Grid.ColumnSpan="2" x:Name="HotkeyOverlay" Visibility="Collapsed" Background="#CC000000" PreviewKeyDown="HotkeyOverlay_PreviewKeyDown">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="YENİ KISAYOL BEKLENİYOR..." FontSize="18" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                <TextBlock Text="Tuşlara basın..." FontSize="13" Foreground="{StaticResource iosTextSecondary}" Margin="0,15" HorizontalAlignment="Center"/>
+                <Button Content="İptal" Click="CancelHotkey_Click" Style="{StaticResource MaterialDesignFlatButton}" Foreground="{StaticResource iosRed}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
 </Window>

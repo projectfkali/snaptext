@@ -13,7 +13,11 @@ namespace SnapText
     {
         private System.Windows.Point _startPoint;
         private bool _isDragging = false;
-        public string ExtractedText { get; private set; }
+        public string ExtractedText { get; private set; } = string.Empty;
+        public string QrResult { get; private set; } = string.Empty;
+        public bool ShouldEnhance { get; set; } = true;
+        public bool IsTableMode { get; set; } = false;
+        public string SelectedLanguage { get; set; } = "tr-TR";
 
         public SelectionWindow()
         {
@@ -85,13 +89,58 @@ namespace SnapText
                 g.CopyFromScreen(ix, iy, 0, 0, bmp.Size, CopyPixelOperation.SourceCopy);
             }
 
+            if (ShouldEnhance)
+            {
+                bmp = EnhanceImage(bmp);
+            }
+
+            QrResult = ScanQRCode(bmp);
             ExtractedText = await PerformOcr(bmp);
             
             this.DialogResult = true;
             this.Close();
         }
 
-        public string SelectedLanguage { get; set; } = "tr-TR";
+        private Bitmap EnhanceImage(Bitmap bmp)
+        {
+            try
+            {
+                Bitmap newBmp = new Bitmap(bmp.Width, bmp.Height);
+                using (Graphics g = Graphics.FromImage(newBmp))
+                {
+                    // Create grayscale matrix
+                    System.Drawing.Imaging.ColorMatrix colorMatrix = new System.Drawing.Imaging.ColorMatrix(
+                        new float[][]
+                        {
+                            new float[] {.3f, .3f, .3f, 0, 0},
+                            new float[] {.59f, .59f, .59f, 0, 0},
+                            new float[] {.11f, .11f, .11f, 0, 0},
+                            new float[] {0, 0, 0, 1, 0},
+                            new float[] {0, 0, 0, 0, 1}
+                        });
+
+                    using (System.Drawing.Imaging.ImageAttributes attributes = new System.Drawing.Imaging.ImageAttributes())
+                    {
+                        attributes.SetColorMatrix(colorMatrix);
+                        g.DrawImage(bmp, new Rectangle(0, 0, bmp.Width, bmp.Height),
+                            0, 0, bmp.Width, bmp.Height, GraphicsUnit.Pixel, attributes);
+                    }
+                }
+                return newBmp;
+            }
+            catch { return bmp; }
+        }
+
+        private string ScanQRCode(Bitmap bmp)
+        {
+            try
+            {
+                var reader = new ZXing.Windows.Compatibility.BarcodeReader();
+                var result = reader.Decode(bmp);
+                return result?.Text ?? string.Empty;
+            }
+            catch { return string.Empty; }
+        }
 
         private async Task<string> PerformOcr(Bitmap bmp)
         {
@@ -119,7 +168,14 @@ namespace SnapText
                     ocrEngine = OcrEngine.TryCreateFromUserProfileLanguages();
                 }
                 
+                
                 var ocrResult = await ocrEngine.RecognizeAsync(softwareBitmap);
+                
+                if (IsTableMode)
+                {
+                    return TableService.ProcessToMarkdown(ocrResult);
+                }
+                
                 return ocrResult.Text;
             }
             catch (Exception ex)

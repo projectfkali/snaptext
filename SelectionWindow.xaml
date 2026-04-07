@@ -6,6 +6,6 @@
         WindowState="Maximized" MouseDown="Window_MouseDown" 
         MouseMove="Window_MouseMove" MouseUp="Window_MouseUp">
     <Canvas x:Name="OverlayCanvas">
-        <Rectangle x:Name="SelectionRectangle" Stroke="#f43f5e" StrokeThickness="2" Fill="#44ffffff" Visibility="Hidden" />
+        <Rectangle x:Name="SelectionRectangle" Stroke="#0A84FF" StrokeThickness="2" Fill="#330A84FF" Visibility="Hidden" />
     </Canvas>
 </Window>

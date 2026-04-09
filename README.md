@@ -18,6 +18,13 @@
 
 [English](#english) | [Türkçe](#türkçe)
 
+<p align="center">
+  <br>
+  <a href="https://github.com/projectfkali/snaptext/releases/tag/QR">
+    <img src="https://img.shields.io/badge/Download_Installer-v5.0_QR-0078D4?style=for-the-badge&logo=windows" alt="Download Application">
+  </a>
+</p>
+
 ---
 
 ## English

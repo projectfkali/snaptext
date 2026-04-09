@@ -12,21 +12,28 @@
             </ResourceDictionary.MergedDictionaries>
 
             <Style TargetType="{x:Type Window}">
-                <Setter Property="Foreground" Value="#FFFFFF"/>
+                <Setter Property="Foreground" Value="#F2F2F7"/>
             </Style>
 
-            <!-- IOs Style Palette -->
-            <SolidColorBrush x:Key="iosBlue"          Color="#0A84FF"/>
-            <SolidColorBrush x:Key="iosCard"           Color="#2C2C2E"/>
-            <SolidColorBrush x:Key="iosSideBar"        Color="#111113"/>
-            <SolidColorBrush x:Key="iosSurface"        Color="#3A3A3C"/>
-            <SolidColorBrush x:Key="iosSeparator"      Color="#38383A"/>
-            <SolidColorBrush x:Key="iosTextPrimary"    Color="#FFFFFF"/>
+            <!-- Premium Neon Glow Palette -->
+            <SolidColorBrush x:Key="iosBlue"          Color="#0A84FF"/> <!-- Electric Blue -->
+            <SolidColorBrush x:Key="iosPurple"        Color="#BF5AF2"/> <!-- Neon Purple -->
+            <SolidColorBrush x:Key="iosCard"           Color="#1C1C1E"/> <!-- Dark Card -->
+            <SolidColorBrush x:Key="iosGlassCard"      Color="#262629"/> <!-- Glassmorphism Card -->
+            <SolidColorBrush x:Key="iosSideBar"        Color="#0D0D0F"/> <!-- Deep Sidebar -->
+            <SolidColorBrush x:Key="iosSurface"        Color="#2C2C2E"/> <!-- Surface -->
+            <SolidColorBrush x:Key="iosSeparator"      Color="#38383A"/> 
+            <SolidColorBrush x:Key="iosTextPrimary"    Color="#F2F2F7"/> 
             <SolidColorBrush x:Key="iosTextSecondary"  Color="#8E8E93"/>
             <SolidColorBrush x:Key="iosRed"            Color="#FF453A"/>
             <SolidColorBrush x:Key="iosGreen"          Color="#30D158"/>
+            <SolidColorBrush x:Key="iosAmber"          Color="#FFD60A"/>
 
-            <!-- Pill Button -->
+            <!-- Neon Glow Shadow Effect -->
+            <DropShadowEffect x:Key="NeonGlowBlue"   BlurRadius="15" Color="#0A84FF" Opacity="0.4" ShadowDepth="0"/>
+            <DropShadowEffect x:Key="NeonGlowPurple" BlurRadius="15" Color="#BF5AF2" Opacity="0.4" ShadowDepth="0"/>
+
+            <!-- Premium Pill Button (Neon) -->
             <Style x:Key="iosPillButton" TargetType="Button">
                 <Setter Property="Background"   Value="{StaticResource iosBlue}"/>
                 <Setter Property="Foreground"   Value="White"/>
@@ -36,12 +43,38 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="12">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="14">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="bd" Property="Opacity" Value="0.9"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="bd" Property="Opacity" Value="0.8"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Iconic Action Chip Button -->
+            <Style x:Key="ActionChipButton" TargetType="Button">
+                <Setter Property="Background" Value="#15FFFFFF"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Padding" Value="12,6"/>
+                <Setter Property="Margin" Value="4"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="10" BorderThickness="1" BorderBrush="#10FFFFFF">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="bd" Property="Background" Value="#25FFFFFF"/>
+                                    <Setter TargetName="bd" Property="BorderBrush" Value="#40FFFFFF"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -58,12 +91,12 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="bd" Background="Transparent" CornerRadius="8">
+                            <Border x:Name="bd" Background="Transparent" CornerRadius="10">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bd" Property="Background" Value="#20FFFFFF"/>
+                                    <Setter TargetName="bd" Property="Background" Value="#15FFFFFF"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

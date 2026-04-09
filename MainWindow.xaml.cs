@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Speech.Synthesis;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media.Imaging;
 using Microsoft.Win32;
-using MaterialDesignThemes.Wpf;
 
 namespace SnapText
 {
@@ -20,9 +16,6 @@ namespace SnapText
         private AppSettings _settings;
         private List<OcrHistoryItem> _history;
         private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
-        private SpeechSynthesizer _speechSynthesizer;
-        private LocalAiService _ai;
-        private OverlayBar? _currentOverlay;
 
         // ─── Win32 Hotkey ───────────────────────────────────────────────────
         private const uint MOD_CONTROL = 0x0002;
@@ -31,7 +24,7 @@ namespace SnapText
         private const uint MOD_WIN     = 0x0008;
         private const uint VK_S        = 0x53;
 
-        private int  _hotkeyId        = 9000;
+        private int  _hotkeyId         = 9000;
         private uint _currentModifiers = MOD_CONTROL | MOD_SHIFT;
         private uint _currentKey       = VK_S;
 
@@ -44,26 +37,17 @@ namespace SnapText
             InitializeComponent();
 
             this.MouseDown += (s, e) => { 
-                if (e.ChangedButton == MouseButton.Left && SettingsOverlay.Visibility != Visibility.Visible && HotkeyOverlay.Visibility != Visibility.Visible) 
+                if (e.ChangedButton == MouseButton.Left && HotkeyOverlay.Visibility != Visibility.Visible) 
                     this.DragMove(); 
             };
 
-            _settings          = ConfigService.LoadSettings();
-            _history           = ConfigService.LoadHistory();
-            _speechSynthesizer = new SpeechSynthesizer();
-            _ai                = new LocalAiService();
-
-            // Set default AI translation target if missing
-            if (string.IsNullOrEmpty(_settings.TranslationTarget) || _settings.TranslationTarget == "tr")
-            {
-                _settings.TranslationTarget = "Turkish";
-            }
-
+            _settings = ConfigService.LoadSettings();
+            _history  = ConfigService.LoadHistory();
+            
             LoadLanguages();
             ApplySettings();
             RefreshHistoryUI();
             InitializeTrayIcon();
-            UpdateEmptyState();
         }
 
         // ─── Languages ──────────────────────────────────────────────────────
@@ -162,15 +146,11 @@ namespace SnapText
             AutoCopyCheckBox.IsChecked         = _settings.AutoCopy;
             AlwaysOnTopCheckBox.IsChecked      = _settings.AlwaysOnTop;
             StartWithWindowsCheckBox.IsChecked = _settings.StartWithWindows;
-            DarkModeCheckBox.IsChecked         = _settings.Theme == "Dark";
             HotkeyTextBlock.Text               = _settings.Hotkey;
             this.Topmost                       = _settings.AlwaysOnTop;
 
             foreach (ComboBoxItem item in LanguageComboBox.Items)
                 if (item.Tag?.ToString() == _settings.Language) { LanguageComboBox.SelectedItem = item; break; }
-
-            foreach (ComboBoxItem item in TargetLangComboBox.Items)
-                if (item.Tag?.ToString() == _settings.TranslationTarget) { TargetLangComboBox.SelectedItem = item; break; }
         }
 
         private void RefreshHistoryUI()
@@ -189,29 +169,13 @@ namespace SnapText
             _settings.AutoCopy         = AutoCopyCheckBox.IsChecked    ?? true;
             _settings.AlwaysOnTop      = AlwaysOnTopCheckBox.IsChecked ?? false;
             _settings.StartWithWindows = StartWithWindowsCheckBox.IsChecked ?? false;
-            _settings.Theme            = (DarkModeCheckBox.IsChecked   ?? true) ? "Dark" : "Light";
             this.Topmost               = _settings.AlwaysOnTop;
 
             if (LanguageComboBox.SelectedItem is ComboBoxItem lang)
                 _settings.Language = lang.Tag?.ToString() ?? "tr-TR";
-            if (TargetLangComboBox.SelectedItem is ComboBoxItem tgt)
-                _settings.TranslationTarget = tgt.Tag?.ToString() ?? "Turkish";
 
             ConfigService.SaveSettings(_settings);
-            ApplyTheme();
             SetAutostart(_settings.StartWithWindows);
-        }
-
-        private void ApplyTheme()
-        {
-            var ph    = new PaletteHelper();
-            var theme = ph.GetTheme();
-            theme.SetBaseTheme(_settings.Theme == "Dark" ? BaseTheme.Dark : BaseTheme.Light);
-            ph.SetTheme(theme);
-            this.Background = new System.Windows.Media.SolidColorBrush(
-                _settings.Theme == "Dark"
-                    ? System.Windows.Media.Color.FromRgb(28, 28, 30)
-                    : System.Windows.Media.Color.FromRgb(242, 242, 247));
         }
 
         private void SetAutostart(bool enable)
@@ -232,24 +196,21 @@ namespace SnapText
         private void ClearCurrent_Click(object sender, RoutedEventArgs e)  => ResultTextBox.Clear();
         private void CopyCurrent_Click(object sender, RoutedEventArgs e)   { if (!string.IsNullOrEmpty(ResultTextBox.Text)) Clipboard.SetText(ResultTextBox.Text); }
 
-        private void ResultTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            UpdateEmptyState();
-        }
-
-        private void UpdateEmptyState()
-        {
-            if (EmptyStateOverlay != null && ResultTextBox != null)
-            {
-                EmptyStateOverlay.Visibility = string.IsNullOrWhiteSpace(ResultTextBox.Text) ? Visibility.Visible : Visibility.Collapsed;
-            }
-        }
-
         private void TogglePin_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button btn && btn.Tag is OcrHistoryItem item)
             {
                 item.IsPinned = !item.IsPinned;
+                ConfigService.SaveHistory(_history);
+                RefreshHistoryUI();
+            }
+        }
+
+        private void DeleteHistoryItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is OcrHistoryItem item)
+            {
+                _history.Remove(item);
                 ConfigService.SaveHistory(_history);
                 RefreshHistoryUI();
             }
@@ -266,127 +227,9 @@ namespace SnapText
 
         private void ClearHistory_Click(object sender, RoutedEventArgs e)
         {
-            // Keep only pinned items
             _history = _history.Where(h => h.IsPinned).ToList();
             ConfigService.SaveHistory(_history);
             RefreshHistoryUI();
-        }
-
-        private void TranslateWeb_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(ResultTextBox.Text)) return;
-            string tLang = _settings.TranslationTarget == "English" ? "en" : "tr";
-            OpenUrl($"https://translate.google.com/?sl=auto&tl={tLang}&text={Uri.EscapeDataString(ResultTextBox.Text)}&op=translate");
-        }
-
-        private void Speak_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(ResultTextBox.Text)) return;
-            _speechSynthesizer.SpeakAsyncCancelAll();
-            _speechSynthesizer.SpeakAsync(ResultTextBox.Text);
-        }
-
-        private void OpenUrl(string url)
-        {
-            try { Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true }); } catch { }
-        }
-
-        private void Export_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(ResultTextBox.Text)) return;
-            var dlg = new SaveFileDialog { Filter = "Markdown (*.md)|*.md|CSV (*.csv)|*.csv|Metin (*.txt)|*.txt" };
-            if (dlg.ShowDialog() == true)
-            {
-                System.IO.File.WriteAllText(dlg.FileName, ResultTextBox.Text);
-                MessageBox.Show("Başarıyla kaydedildi!", "SnapText");
-            }
-        }
-
-        // ─── AI Actions ───────────────────────────────────────────────────────
-        private async void AiSummarize_Click(object sender, RoutedEventArgs e) => await CallAi("Bu metni kısa ve anlaşılır şekilde özetle:");
-        private async void AiExplain_Click (object sender, RoutedEventArgs e)  => await CallAi("Bu kodun ne işe yaradığını açıkla / Bu metni detaylıca incele:");
-
-        private void SendCustomPrompt_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(CustomPromptTextBox.Text)) return;
-            string command = CustomPromptTextBox.Text;
-            CustomPromptTextBox.Clear();
-            _ = CallAi(command);
-        }
-
-        private void CustomPromptTextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-            {
-                e.Handled = true;
-                SendCustomPrompt_Click(sender, e);
-            }
-        }
-
-        private void AiClean_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(ResultTextBox.Text)) return;
-            ResultTextBox.Text = TextHelper.SmartCleanOcrText(ResultTextBox.Text);
-            _history.Insert(0, new OcrHistoryItem { Text = ResultTextBox.Text, Timestamp = DateTime.Now });
-            ConfigService.SaveHistory(_history);
-            RefreshHistoryUI();
-        }
-
-        private async void AiTranslate_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(ResultTextBox.Text)) return;
-            
-            InlineAiProgress.Visibility = Visibility.Visible;
-            DisableAiButtons(true);
-
-            string targetLang = _settings.TranslationTarget ?? "Turkish";
-
-            string result = await _ai.TranslateTextAsync(ResultTextBox.Text, targetLang,
-                progress => Dispatcher.Invoke(() => 
-                {
-                    if (progress != "...") {
-                        ResultTextBox.Text = progress;
-                        ResultTextBox.ScrollToEnd();
-                    }
-                }));
-
-            InlineAiProgress.Visibility = Visibility.Collapsed;
-            DisableAiButtons(false);
-
-            ResultTextBox.Text = result;
-            _history.Insert(0, new OcrHistoryItem { Text = "[Çeviri] " + result, Timestamp = DateTime.Now });
-            ConfigService.SaveHistory(_history);
-            RefreshHistoryUI();
-        }
-
-        private async Task CallAi(string prompt)
-        {
-            if (string.IsNullOrWhiteSpace(ResultTextBox.Text)) return;
-
-            InlineAiProgress.Visibility = Visibility.Visible;
-            DisableAiButtons(true);
-
-            string result = await _ai.ProcessTextAsync(prompt, ResultTextBox.Text,
-                progress => Dispatcher.Invoke(() => 
-                {
-                    if (progress != "...") {
-                        ResultTextBox.Text = progress;
-                        ResultTextBox.ScrollToEnd();
-                    }
-                }));
-
-            InlineAiProgress.Visibility = Visibility.Collapsed;
-            DisableAiButtons(false);
-
-            ResultTextBox.Text = result;
-            _history.Insert(0, new OcrHistoryItem { Text = "[AI] " + result, Timestamp = DateTime.Now });
-            ConfigService.SaveHistory(_history);
-            RefreshHistoryUI();
-        }
-
-        private void DisableAiButtons(bool disabled)
-        {
-            this.Cursor = disabled ? Cursors.Wait : Cursors.Arrow;
         }
 
         // ─── Capture ──────────────────────────────────────────────────────────
@@ -399,34 +242,31 @@ namespace SnapText
             {
                 SelectedLanguage = _settings.Language,
                 ShouldEnhance    = _settings.EnhanceImage,
-                IsTableMode      = _settings.UseTableMode
+                IsTableMode      = _settings.UseTableMode,
+                AutoCopy         = _settings.AutoCopy
             };
 
             if (win.ShowDialog() == true)
             {
-                QrBadge.Visibility = !string.IsNullOrEmpty(win.QrResult) ? Visibility.Visible : Visibility.Collapsed;
-
-                if (!string.IsNullOrEmpty(win.QrResult))
-                {
-                    ResultTextBox.Text = win.QrResult;
-                    if (win.QrResult.StartsWith("http")) OpenUrl(win.QrResult);
-                }
-
                 if (!string.IsNullOrEmpty(win.ExtractedText))
                 {
                     string text = win.ExtractedText.Trim();
-                    ResultTextBox.Text = (_settings.AppendMode && !string.IsNullOrWhiteSpace(ResultTextBox.Text))
-                        ? ResultTextBox.Text + "\n" + text
-                        : text;
+                    string finaltext = text;
 
-                    if (_settings.AutoCopy) Clipboard.SetText(ResultTextBox.Text);
-                    _history.Insert(0, new OcrHistoryItem { Text = ResultTextBox.Text, Timestamp = DateTime.Now });
+                    // If append mode, combine with latest pinned text or unpinned? 
+                    // To keep it simple, just add it as a new Item. Append mode usually means appending to the clipboard.
+                    if (_settings.AppendMode)
+                    {
+                        var clip = Clipboard.GetText();
+                        if (!string.IsNullOrWhiteSpace(clip)) finaltext = clip + "\n" + text;
+                    }
+
+                    if (_settings.AutoCopy) Clipboard.SetText(finaltext);
+                    _history.Insert(0, new OcrHistoryItem { Text = finaltext, Timestamp = DateTime.Now });
                     ConfigService.SaveHistory(_history);
                     RefreshHistoryUI();
-
-                    _currentOverlay?.Close();
-                    _currentOverlay = new OverlayBar(ResultTextBox.Text, _settings);
-                    _currentOverlay.Show();
+                    
+                    ResultTextBox.Text = finaltext;
                 }
 
                 this.Show();
@@ -471,8 +311,6 @@ namespace SnapText
         protected override void OnClosed(EventArgs e)
         {
             _notifyIcon?.Dispose();
-            _speechSynthesizer?.Dispose();
-            _ai?.Dispose();
             var helper = new WindowInteropHelper(this);
             UnregisterHotKey(helper.Handle, _hotkeyId);
             base.OnClosed(e);

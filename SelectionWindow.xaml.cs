@@ -18,10 +18,15 @@ namespace SnapText
         public bool ShouldEnhance { get; set; } = true;
         public bool IsTableMode { get; set; } = false;
         public string SelectedLanguage { get; set; } = "tr-TR";
+        public bool AutoCopy { get; set; } = true;
 
         public SelectionWindow()
         {
             InitializeComponent();
+            this.Loaded += (s, e) =>
+            {
+                FullScreenGeometry.Rect = new Rect(0, 0, this.ActualWidth, this.ActualHeight);
+            };
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -30,11 +35,15 @@ namespace SnapText
             {
                 _startPoint = e.GetPosition(OverlayCanvas);
                 _isDragging = true;
+                FloatingToolbar.Visibility = Visibility.Collapsed;
                 SelectionRectangle.Visibility = Visibility.Visible;
                 SelectionRectangle.Width = 0;
                 SelectionRectangle.Height = 0;
                 System.Windows.Controls.Canvas.SetLeft(SelectionRectangle, _startPoint.X);
                 System.Windows.Controls.Canvas.SetTop(SelectionRectangle, _startPoint.Y);
+                
+                FullScreenGeometry.Rect = new Rect(0, 0, this.ActualWidth, this.ActualHeight);
+                SelectionGeometry.Rect = new Rect(0, 0, 0, 0);
             }
         }
 
@@ -52,6 +61,8 @@ namespace SnapText
                 SelectionRectangle.Height = h;
                 System.Windows.Controls.Canvas.SetLeft(SelectionRectangle, x);
                 System.Windows.Controls.Canvas.SetTop(SelectionRectangle, y);
+                
+                SelectionGeometry.Rect = new Rect(x, y, w, h);
             }
         }
 
@@ -97,7 +108,67 @@ namespace SnapText
             QrResult = ScanQRCode(bmp);
             ExtractedText = await PerformOcr(bmp);
             
+            if (AutoCopy)
+            {
+                if (!string.IsNullOrEmpty(ExtractedText)) Clipboard.SetText(ExtractedText);
+                this.DialogResult = true;
+                this.Close();
+            }
+            else
+            {
+                this.Cursor = Cursors.Arrow;
+                double tX = left + width - FloatingToolbar.ActualWidth;
+                double tY = top + height + 10;
+                
+                if (tX < 0) tX = left;
+                if (tY + FloatingToolbar.ActualHeight > this.ActualHeight) tY = top - FloatingToolbar.ActualHeight - 10;
+                
+                System.Windows.Controls.Canvas.SetLeft(FloatingToolbar, tX);
+                System.Windows.Controls.Canvas.SetTop(FloatingToolbar, tY);
+                FloatingToolbar.Visibility = Visibility.Visible;
+            }
+        }
+        
+        private void ActionCopy_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(ExtractedText)) Clipboard.SetText(ExtractedText);
             this.DialogResult = true;
+            this.Close();
+        }
+
+        private void ActionTranslate_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(ExtractedText))
+            {
+                try
+                {
+                    string url = $"https://translate.google.com/?sl=auto&tl=tr&text={Uri.EscapeDataString(ExtractedText)}&op=translate";
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = url, UseShellExecute = true });
+                }
+                catch { }
+            }
+            this.DialogResult = true;
+            this.Close();
+        }
+
+        private void ActionGoogle_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(ExtractedText))
+            {
+                try
+                {
+                    string url = $"https://www.google.com/search?q={Uri.EscapeDataString(ExtractedText)}";
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = url, UseShellExecute = true });
+                }
+                catch { }
+            }
+            this.DialogResult = true;
+            this.Close();
+        }
+
+        private void ActionClose_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = false;
             this.Close();
         }
 

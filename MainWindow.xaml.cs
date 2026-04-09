@@ -113,8 +113,30 @@ namespace SnapText
                 var streamInfo = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/logo.png"));
                 if (streamInfo != null)
                 {
-                    using var bmp = new System.Drawing.Bitmap(streamInfo.Stream);
-                    _notifyIcon.Icon = System.Drawing.Icon.FromHandle(bmp.GetHicon());
+                    using var ms = new System.IO.MemoryStream();
+                    streamInfo.Stream.CopyTo(ms);
+                    byte[] pngBytes = ms.ToArray();
+
+                    using var icoStream = new System.IO.MemoryStream();
+                    using var writer = new System.IO.BinaryWriter(icoStream);
+                    
+                    writer.Write((short)0); // Reserved
+                    writer.Write((short)1); // Type 1=Icon
+                    writer.Write((short)1); // Count
+                    
+                    writer.Write((byte)0); // Width 256
+                    writer.Write((byte)0); // Height 256
+                    writer.Write((byte)0); // ColorCount
+                    writer.Write((byte)0); // Reserved
+                    writer.Write((short)1); // Planes
+                    writer.Write((short)32); // BitCount
+                    writer.Write(pngBytes.Length); // Size
+                    writer.Write(22); // Offset
+                    
+                    writer.Write(pngBytes);
+                    icoStream.Seek(0, System.IO.SeekOrigin.Begin);
+
+                    _notifyIcon.Icon = new System.Drawing.Icon(icoStream);
                 }
                 else _notifyIcon.Icon = System.Drawing.SystemIcons.Application;
             }
@@ -248,17 +270,33 @@ namespace SnapText
 
             if (win.ShowDialog() == true)
             {
+                string finaltext = "";
+                
+                // Process QR Code if found
+                if (!string.IsNullOrEmpty(win.QrResult))
+                {
+                    finaltext = win.QrResult.Trim();
+                    if (finaltext.StartsWith("http"))
+                    {
+                        try { Process.Start(new ProcessStartInfo { FileName = finaltext, UseShellExecute = true }); } catch { }
+                    }
+                }
+
+                // Append OCR Text
                 if (!string.IsNullOrEmpty(win.ExtractedText))
                 {
                     string text = win.ExtractedText.Trim();
-                    string finaltext = text;
+                    if (!string.IsNullOrEmpty(finaltext)) finaltext += "\n\n" + text;
+                    else finaltext = text;
+                }
 
-                    // If append mode, combine with latest pinned text or unpinned? 
-                    // To keep it simple, just add it as a new Item. Append mode usually means appending to the clipboard.
+                if (!string.IsNullOrEmpty(finaltext))
+                {
+                    // Append Mode Support
                     if (_settings.AppendMode)
                     {
                         var clip = Clipboard.GetText();
-                        if (!string.IsNullOrWhiteSpace(clip)) finaltext = clip + "\n" + text;
+                        if (!string.IsNullOrWhiteSpace(clip)) finaltext = clip + "\n" + finaltext;
                     }
 
                     if (_settings.AutoCopy) Clipboard.SetText(finaltext);
